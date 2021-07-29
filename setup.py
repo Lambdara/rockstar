@@ -121,3 +121,6 @@ for song in songs:
         """,
         song
     )
+
+db.commit()
+db.close()
