@@ -1,6 +1,6 @@
 from flask import Flask, g
+from flask.json import jsonify
 import sqlite3
-from flask.cli import with_appcontext
 
 app = Flask(__name__)
 
@@ -27,10 +27,34 @@ def show_index():
 @app.route("/artists")
 def hello_world():
     db = get_db()
-    return "<br>".join([str(row) for row in db.execute("SELECT * FROM artists")])
+    artists = [
+        {
+            "id": row[0],
+            "name": row[1],
+        }
+        for row in db.execute("SELECT * FROM artists")
+    ]
+
+    return jsonify(artists)
 
 
 @app.route("/songs")
 def list_songs():
     db = get_db()
-    return "<br>".join([str(row) for row in db.execute("SELECT * FROM songs")])
+    artists = [
+        {
+            "id": row[0],
+            "name": row[1],
+            "year": row[2],
+            "artist": row[3],
+            "shortname": row[4],
+            "bpm": row[5],
+            "duration": row[6],
+            "genre": row[7],
+            "spotify_id": row[8],
+            "album": row[9],
+        }
+        for row in db.execute("SELECT * FROM songs")
+    ]
+
+    return jsonify(artists)
