@@ -40,14 +40,22 @@ def get_artists():
     return jsonify(artists)
 
 
-@app.route("/artists/<int:artist_id>")
+@app.route("/artists/<int:artist_id>", methods=["GET"])
 def get_artist(artist_id):
     db = get_db()
     try:
         artist = [row_to_artist(row) for row in db.execute("SELECT * FROM artists WHERE id = ?", (artist_id,))][0]
     except IndexError:
-        abort(404)
+        return jsonify(error="NOT FOUND"), 404
     return jsonify(artist)
+
+
+@app.route("/artists/<int:artist_id>", methods=["DELETE"])
+def delete_artist(artist_id):
+    db = get_db()
+    db.execute("DELETE FROM artists WHERE id = ?", (artist_id,))
+    db.commit()
+    return jsonify(success=True), 200
 
 
 def row_to_song(row):
@@ -73,11 +81,19 @@ def get_songs():
     return jsonify(songs)
 
 
-@app.route("/songs/<int:song_id>")
+@app.route("/songs/<int:song_id>", methods=["GET"])
 def get_song(song_id):
     db = get_db()
     try:
         song = [row_to_song(row) for row in db.execute("SELECT * FROM songs WHERE id = ?", (song_id,))][0]
     except IndexError:
-        abort(404)
+        return jsonify(error="NOT FOUND"), 404
     return jsonify(song)
+
+
+@app.route("/songs/<int:song_id>", methods=["DELETE"])
+def delete_song(song_id):
+    db = get_db()
+    db.execute("DELETE FROM songs WHERE id = ?", (song_id,))
+    db.commit()
+    return jsonify(success=True), 200
