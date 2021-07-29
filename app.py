@@ -40,6 +40,17 @@ def hello_world():
     return jsonify(artists)
 
 
+@app.route("/artists/<int:artist_id>")
+def get_artist(artist_id):
+    db = get_db()
+    artists = [
+        row_to_artist(row)
+        for row in db.execute("SELECT * FROM artists WHERE id = ?", (artist_id,))
+    ]
+
+    return jsonify(artists)
+
+
 def row_to_song(row):
     # This translates a database row from artists table to a dict
     return {
@@ -57,7 +68,7 @@ def row_to_song(row):
 
 
 @app.route("/songs")
-def list_songs():
+def get_songs():
     db = get_db()
     songs = [row_to_song(row) for row in db.execute("SELECT * FROM songs")]
     return jsonify(songs)
