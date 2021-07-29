@@ -41,7 +41,7 @@ def hello_world():
 @app.route("/songs")
 def list_songs():
     db = get_db()
-    artists = [
+    songs = [
         {
             "id": row[0],
             "name": row[1],
@@ -57,4 +57,5 @@ def list_songs():
         for row in db.execute("SELECT * FROM songs")
     ]
 
-    return jsonify(artists)
+    return jsonify(songs)
+
