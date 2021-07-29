@@ -12,7 +12,7 @@ for artist_datum in artists_data:
         {
             "id": int(artist_datum["Id"]),
             "name": artist_datum["Name"],
-            "songs": [], # We fill this when assigning artists to songs
+            "songs": [],  # We fill this when assigning artists to songs
         }
     )
 
@@ -31,7 +31,9 @@ for songs_datum in songs_data:
             "artist": songs_datum["Artist"],
             "shortname": songs_datum["Shortname"],
             "bpm": int(songs_datum["Bpm"]) if songs_datum["Bpm"] else None,
-            "duration": int(songs_datum["Duration"]) if songs_datum["Duration"] else None,
+            "duration": int(songs_datum["Duration"])
+            if songs_datum["Duration"]
+            else None,
             "genre": songs_datum["Genre"],
             "spotify_id": songs_datum["SpotifyId"],
             "album": songs_datum["Album"],
@@ -62,7 +64,14 @@ for song in songs:
 
 
 # We only want metal artists and artists of songs from before 2016
-artists = list(filter(lambda artist: any(song["year"] < 2016 or "Metal" in song["genre"] for song in artist["songs"]), artists))
+artists = list(
+    filter(
+        lambda artist: any(
+            song["year"] < 2016 or "Metal" in song["genre"] for song in artist["songs"]
+        ),
+        artists,
+    )
+)
 
 # We only want songs from before 2016:
 songs = list(filter(lambda song: song["year"] < 2016, songs))
@@ -89,7 +98,7 @@ for artist in artists:
         INSERT INTO artists (id, name)
         VALUES (:id, :name)
         """,
-        artist
+        artist,
     )
 
 # Create table songs
@@ -119,7 +128,7 @@ for song in songs:
         INSERT INTO songs (id, name, year, artist_id, shortname, bpm, duration, genre, spotify_id, album)
         VALUES (:id, :name, :year, :artist_id, :shortname, :bpm, :duration, :genre, :spotify_id, :album)
         """,
-        song
+        song,
     )
 
 db.commit()
