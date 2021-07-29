@@ -33,7 +33,7 @@ def row_to_artist(row):
 
 
 @app.route("/artists")
-def hello_world():
+def get_artists():
     db = get_db()
     artists = [row_to_artist(row) for row in db.execute("SELECT * FROM artists")]
 
