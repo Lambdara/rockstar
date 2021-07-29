@@ -44,7 +44,10 @@ def get_artists():
 def get_artist(artist_id):
     db = get_db()
     try:
-        artist = [row_to_artist(row) for row in db.execute("SELECT * FROM artists WHERE id = ?", (artist_id,))][0]
+        artist = [
+            row_to_artist(row)
+            for row in db.execute("SELECT * FROM artists WHERE id = ?", (artist_id,))
+        ][0]
     except IndexError:
         return jsonify(error="NOT FOUND"), 404
     return jsonify(artist)
@@ -85,7 +88,10 @@ def get_songs():
 def get_song(song_id):
     db = get_db()
     try:
-        song = [row_to_song(row) for row in db.execute("SELECT * FROM songs WHERE id = ?", (song_id,))][0]
+        song = [
+            row_to_song(row)
+            for row in db.execute("SELECT * FROM songs WHERE id = ?", (song_id,))
+        ][0]
     except IndexError:
         return jsonify(error="NOT FOUND"), 404
     return jsonify(song)
