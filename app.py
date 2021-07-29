@@ -1,4 +1,4 @@
-from flask import Flask, g, request
+from flask import Flask, g, request, abort
 from flask.json import jsonify
 import sqlite3
 
@@ -43,12 +43,11 @@ def get_artists():
 @app.route("/artists/<int:artist_id>")
 def get_artist(artist_id):
     db = get_db()
-    artists = [
-        row_to_artist(row)
-        for row in db.execute("SELECT * FROM artists WHERE id = ?", (artist_id,))
-    ]
-
-    return jsonify(artists)
+    try:
+        artist = [row_to_artist(row) for row in db.execute("SELECT * FROM artists WHERE id = ?", (artist_id,))][0]
+    except IndexError:
+        abort(404)
+    return jsonify(artist)
 
 
 def row_to_song(row):
@@ -72,3 +71,13 @@ def get_songs():
     db = get_db()
     songs = [row_to_song(row) for row in db.execute("SELECT * FROM songs")]
     return jsonify(songs)
+
+
+@app.route("/songs/<int:song_id>")
+def get_song(song_id):
+    db = get_db()
+    try:
+        song = [row_to_song(row) for row in db.execute("SELECT * FROM songs WHERE id = ?", (song_id,))][0]
+    except IndexError:
+        abort(404)
+    return jsonify(song)
