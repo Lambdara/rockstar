@@ -5,6 +5,8 @@ I used Python 3.8.10 and Ubuntu 20.04 LTS.
 
 Create a virtualenv and install the packages in requirements.txt. You can use `pip install -r requirements.txt`, though if your python version is slightly different that may not work.
 
+You will need to run `setup.py` to set up the database.
+
 ## Running the application
 Under your virtualenv with all the packages, do `flask run`. You wouldn't expect it, but Flask is now running and you can talk to it using the provided URL, probably http://127.0.0.1:5000/. You can talk to it using postman, for example.
 
