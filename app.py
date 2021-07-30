@@ -39,7 +39,18 @@ def row_to_artist(row):
 @app.route("/artists", methods=["GET"])
 def get_artists():
     db = get_db()
-    artists = [row_to_artist(row) for row in db.execute("SELECT * FROM artists")]
+
+    query = "SELECT * FROM artists"
+    args = dict()
+
+    if "name" in request.args:
+        query += " WHERE name = :name"
+        args = {"name": request.args["name"]}
+    if "name[contains]" in request.args:
+        query += " WHERE name LIKE :name"
+        args = {"name": "%" + request.args["name[contains]"] + "%"}
+
+    artists = [row_to_artist(row) for row in db.execute(query, args)]
 
     return jsonify(artists)
 
@@ -176,8 +187,6 @@ def get_songs():
 
     if filters:
         query += " WHERE " + " AND ".join(filters)
-    print(query)
-    print(args)
 
     songs = [row_to_song(row) for row in db.execute(query, args)]
 
