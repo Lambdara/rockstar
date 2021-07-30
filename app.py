@@ -105,14 +105,17 @@ def update_artist(artist_id):
         artist[key] = request.json[key]
     artist["id"] = artist_id
 
-    db.execute(
-        """
-        UPDATE artists
-        SET name = :name
-        WHERE id = :id
-        """,
-        artist,
-    )
+    try:
+        db.execute(
+            """
+            UPDATE artists
+            SET name = :name
+            WHERE id = :id
+            """,
+            artist,
+        )
+    except sqlite3.IntegrityError as error:
+        return jsonify(error=str(error)), 400
 
     db.commit()
     cache.clear()
@@ -266,7 +269,7 @@ def create_song():
         "album",
     ]:
         if key not in request.json:
-            return jsonify(error=f"Missing key '{key}'")
+            return jsonify(error=f"Missing key '{key}'"), 400
 
     try:
         cursor = db.cursor()
