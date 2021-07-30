@@ -1,4 +1,5 @@
 from logging import error
+from re import A
 from sqlite3.dbapi2 import IntegrityError
 from flask import Flask, g, request
 from flask.json import jsonify
@@ -131,7 +132,55 @@ def row_to_song(row):
 @app.route("/songs")
 def get_songs():
     db = get_db()
-    songs = [row_to_song(row) for row in db.execute("SELECT * FROM songs")]
+    query = "SELECT * FROM songs"
+
+    arg_setup = {
+        "id": "id = :id",
+        "name": "name = :name",
+        "name[contains]": "name LIKE :name",
+        "year": "year = :year",
+        "year[greater]": "year > :year",
+        "year[smaller]": "year < :year",
+        "year[geq]": "year >= :year",
+        "year[seq]": "year <= :year",
+        "artist_id": "artist_id = :artist_id",
+        "shortname": "shortname = :shortname",
+        "shortname[contains]": "shortname LIKE :shortname",
+        "bpm": "bpm = :bpm",
+        "bpm[greater]": "bpm > :bpm",
+        "bpm[smaller]": "bpm < :bpm",
+        "bpm[geq]": "bpm >= :bpm",
+        "bpm[seq]": "bpm <= :bpm",
+        "duration": "duration = :duration",
+        "duration[greater]": "duration > :duration",
+        "duration[smaller]": "duration < :duration",
+        "duration[geq]": "duration >= :duration",
+        "duration[seq]": "duration <= :duration",
+        "genre": "genre = :genre",
+        "genre[contains]": "genre LIKE :genre",
+        "spotify_id": "spotify_id = :spotify_id",
+        "album": "album = :album",
+        "album[contains]": "album LIKE :album",
+    }
+
+    filters = []
+
+    args = dict()
+    for arg in request.args:
+        if arg in arg_setup.keys():
+            filters.append(" " + arg_setup[arg])
+        arg_key = arg.split("[")[0]
+        args[arg_key] = request.args[arg]
+        if "LIKE" in arg_setup[arg]:
+            args[arg_key] = "%" + args[arg_key] + "%"
+
+    if filters:
+        query += " WHERE " + " AND ".join(filters)
+    print(query)
+    print(args)
+
+    songs = [row_to_song(row) for row in db.execute(query, args)]
+
     return jsonify(songs)
 
 
