@@ -1,5 +1,7 @@
 # Rockstar
 
+Technical assessment exercise for Team Rockstars IT
+
 ## Installing the application
 I used Python 3.8.10 and Ubuntu 20.04 LTS.
 
