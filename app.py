@@ -237,7 +237,7 @@ def update_song(song_id):
         return jsonify(error=str(error)), 400
 
     db.commit()
-    return jsonify(success=True), 200
+    return jsonify(success=True)
 
 
 @app.route("/songs", methods=["POST"])
@@ -270,7 +270,7 @@ def create_song():
         return jsonify(error=str(error)), 400
 
     db.commit()
-    return jsonify(success=True), 200
+    return jsonify(success=True)
 
 
 @app.route("/songs/<int:song_id>", methods=["DELETE"])
@@ -278,4 +278,4 @@ def delete_song(song_id):
     db = get_db()
     db.execute("DELETE FROM songs WHERE id = ?", (song_id,))
     db.commit()
-    return jsonify(success=True), 200
+    return jsonify(success=True)
