@@ -90,7 +90,7 @@ The `year`, `artist_id`, `bpm` and `duration` are integers, the other fields are
 Example:
 
     {
-        "name": "woop woop",
+        "name": "Woop Woop",
         "year": 2021,
         "artist_id": 23,
         "shortname": "woopwoop",
@@ -98,7 +98,7 @@ Example:
         "duration": 6342,
         "genre": "Snoeiharde Metal",
         "spotify_id": "130-9128390",
-        "album": "metaru"
+        "album": "Metaru"
     }
 
 The response will contain the `id` of the new song.
