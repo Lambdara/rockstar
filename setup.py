@@ -86,7 +86,7 @@ db.execute(
     """
     CREATE TABLE artists (
         id INTEGER PRIMARY KEY NOT NULL,
-        name TEXT NOT NULL
+        name TEXT NOT NULL UNIQUE
     )
     """
 )
