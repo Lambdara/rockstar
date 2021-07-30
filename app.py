@@ -1,3 +1,4 @@
+from logging import error
 from sqlite3.dbapi2 import IntegrityError
 from flask import Flask, g, request
 from flask.json import jsonify
@@ -72,6 +73,34 @@ def get_artist(artist_id):
     return jsonify(artist)
 
 
+@app.route("/artists/<int:artist_id>", methods=["PATCH"])
+def update_artist(artist_id):
+    db = get_db()
+    try:
+        artist = [
+            row_to_artist(row)
+            for row in db.execute("SELECT * FROM artists WHERE id = ?", (artist_id,))
+        ][0]
+    except IndexError:
+        return jsonify(error="NOT FOUND"), 404
+
+    for key in request.json:
+        artist[key] = request.json[key]
+    artist["id"] = artist_id
+
+    db.execute(
+        """
+        UPDATE artists
+        SET name = :name
+        WHERE id = :id
+        """,
+        artist,
+    )
+
+    db.commit()
+    return jsonify(success=True), 200
+
+
 @app.route("/artists/<int:artist_id>", methods=["DELETE"])
 def delete_artist(artist_id):
     try:
@@ -89,7 +118,7 @@ def row_to_song(row):
         "id": row[0],
         "name": row[1],
         "year": row[2],
-        "artist": row[3],
+        "artist_id": row[3],
         "shortname": row[4],
         "bpm": row[5],
         "duration": row[6],
@@ -117,6 +146,40 @@ def get_song(song_id):
     except IndexError:
         return jsonify(error="NOT FOUND"), 404
     return jsonify(song)
+
+
+@app.route("/songs/<int:song_id>", methods=["PATCH"])
+def update_song(song_id):
+    db = get_db()
+
+    try:
+        song = [
+            row_to_song(row)
+            for row in db.execute("SELECT * FROM songs WHERE id = ?", (song_id,))
+        ][0]
+    except IndexError:
+        return jsonify(error="NOT FOUND"), 404
+
+    for key in request.json:
+        song[key] = request.json[key]
+    song["id"] = song_id
+
+    try:
+        db.execute(
+            """
+            UPDATE songs 
+            SET name = :name, year = :year, artist_id = :artist_id, 
+                shortname = :shortname, bpm = :bpm, duration = :duration, 
+                genre = :genre, spotify_id = :spotify_id, album = :album
+            WHERE id = :id
+            """,
+            song,
+        )
+    except IntegrityError as error:
+        return jsonify(error=str(error)), 400
+
+    db.commit()
+    return jsonify(success=True), 200
 
 
 @app.route("/songs", methods=["POST"])
