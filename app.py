@@ -1,12 +1,18 @@
 from logging import error
 from re import A
 from sqlite3.dbapi2 import IntegrityError
-from flask import Flask, g, request
+from flask import Flask, config, g, request
 from flask.json import jsonify
 import sqlite3
+from flask_caching import Cache
 
+config = {
+    "CACHE_TYPE": "SimpleCache",
+    "CACHE_DEFAULT_TIMEOUT": 300
+}
 app = Flask(__name__)
-
+app.config.from_mapping(config)
+cache = Cache(app)
 
 def get_db():
     db = getattr(g, "_database", None)
@@ -32,6 +38,7 @@ def row_to_artist(row):
 
 
 @app.route("/artists", methods=["GET"])
+@cache.cached()
 def get_artists():
     db = get_db()
 
@@ -54,7 +61,8 @@ def get_artists():
 def create_artist():
     db = get_db()
     try:
-        db.execute(
+        cursor = db.cursor()
+        cursor.execute(
             """
             INSERT INTO artists (name)
             VALUES (:name)
@@ -64,10 +72,12 @@ def create_artist():
     except sqlite3.IntegrityError as error:
         return jsonify(error=str(error)), 400
     db.commit()
-    return jsonify(success=True), 200
+    cache.clear()
+    return jsonify(success=True, id=cursor.lastrowid), 200
 
 
 @app.route("/artists/<int:artist_id>", methods=["GET"])
+@cache.cached()
 def get_artist(artist_id):
     db = get_db()
     try:
@@ -105,6 +115,7 @@ def update_artist(artist_id):
     )
 
     db.commit()
+    cache.clear()
     return jsonify(success=True), 200
 
 
@@ -116,6 +127,7 @@ def delete_artist(artist_id):
         db.commit()
     except IntegrityError as error:
         return jsonify(error=str(error))
+    cache.clear()
     return jsonify(success=True), 200
 
 
@@ -135,7 +147,8 @@ def row_to_song(row):
     }
 
 
-@app.route("/songs")
+@app.route("/songs", methods=["GET"])
+@cache.cached()
 def get_songs():
     db = get_db()
     query = "SELECT * FROM songs"
@@ -189,6 +202,7 @@ def get_songs():
 
 
 @app.route("/songs/<int:song_id>", methods=["GET"])
+@cache.cached()
 def get_song(song_id):
     db = get_db()
     try:
@@ -232,6 +246,7 @@ def update_song(song_id):
         return jsonify(error=str(error)), 400
 
     db.commit()
+    cache.clear()
     return jsonify(success=True)
 
 
@@ -254,7 +269,8 @@ def create_song():
             return jsonify(error=f"Missing key '{key}'")
 
     try:
-        db.execute(
+        cursor = db.cursor()
+        cursor.execute(
             """
             INSERT INTO songs (name, year, artist_id, shortname, bpm, duration, genre, spotify_id, album)
             VALUES (:name, :year, :artist_id, :shortname, :bpm, :duration, :genre, :spotify_id, :album)
@@ -265,7 +281,8 @@ def create_song():
         return jsonify(error=str(error)), 400
 
     db.commit()
-    return jsonify(success=True)
+    cache.clear()
+    return jsonify(success=True, id=cursor.lastrowid)
 
 
 @app.route("/songs/<int:song_id>", methods=["DELETE"])
@@ -273,4 +290,5 @@ def delete_song(song_id):
     db = get_db()
     db.execute("DELETE FROM songs WHERE id = ?", (song_id,))
     db.commit()
+    cache.clear()
     return jsonify(success=True)
