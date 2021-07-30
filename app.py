@@ -23,11 +23,6 @@ def close_db(exception):
         db.close()
 
 
-@app.route("/")
-def show_index():
-    return '<a href="/artists">Artists</a><br><a href="/songs">Songs</a>'
-
-
 def row_to_artist(row):
     # This translates a database row from artists table to a dict
     return {
