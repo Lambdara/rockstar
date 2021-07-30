@@ -1,4 +1,5 @@
-from flask import Flask, g, request, abort
+from sqlite3.dbapi2 import IntegrityError
+from flask import Flask, g, request
 from flask.json import jsonify
 import sqlite3
 
@@ -9,6 +10,7 @@ def get_db():
     db = getattr(g, "_database", None)
     if db is None:
         db = g._database = sqlite3.connect("database.db")
+        db.execute("PRAGMA foreign_keys = 1")
     return db
 
 
@@ -32,12 +34,29 @@ def row_to_artist(row):
     }
 
 
-@app.route("/artists")
+@app.route("/artists", methods=["GET"])
 def get_artists():
     db = get_db()
     artists = [row_to_artist(row) for row in db.execute("SELECT * FROM artists")]
 
     return jsonify(artists)
+
+
+@app.route("/artists", methods=["POST"])
+def create_artist():
+    db = get_db()
+    try:
+        db.execute(
+            """
+            INSERT INTO artists (name)
+            VALUES (:name)
+            """,
+            request.json,
+        )
+    except sqlite3.IntegrityError as error:
+        return jsonify(error=str(error)), 400
+    db.commit()
+    return jsonify(success=True), 200
 
 
 @app.route("/artists/<int:artist_id>", methods=["GET"])
@@ -55,9 +74,12 @@ def get_artist(artist_id):
 
 @app.route("/artists/<int:artist_id>", methods=["DELETE"])
 def delete_artist(artist_id):
-    db = get_db()
-    db.execute("DELETE FROM artists WHERE id = ?", (artist_id,))
-    db.commit()
+    try:
+        db = get_db()
+        db.execute("DELETE FROM artists WHERE id = ?", (artist_id,))
+        db.commit()
+    except IntegrityError as error:
+        return jsonify(error=str(error))
     return jsonify(success=True), 200
 
 
@@ -95,6 +117,39 @@ def get_song(song_id):
     except IndexError:
         return jsonify(error="NOT FOUND"), 404
     return jsonify(song)
+
+
+@app.route("/songs", methods=["POST"])
+def create_song():
+    db = get_db()
+
+    for key in [
+        "name",
+        "year",
+        "artist_id",
+        "shortname",
+        "bpm",
+        "duration",
+        "genre",
+        "spotify_id",
+        "album",
+    ]:
+        if key not in request.json:
+            return jsonify(error=f"Missing key '{key}'")
+
+    try:
+        db.execute(
+            """
+            INSERT INTO songs (name, year, artist_id, shortname, bpm, duration, genre, spotify_id, album)
+            VALUES (:name, :year, :artist_id, :shortname, :bpm, :duration, :genre, :spotify_id, :album)
+            """,
+            request.json,
+        )
+    except sqlite3.IntegrityError as error:
+        return jsonify(error=str(error)), 400
+
+    db.commit()
+    return jsonify(success=True), 200
 
 
 @app.route("/songs/<int:song_id>", methods=["DELETE"])
